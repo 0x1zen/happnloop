@@ -1,0 +1,15 @@
+{
+  "name": "happnloop",
+  "version": "1.0.0",
+  "description": "A Dev-Dating App",
+  "main": "index.js",
+  "scripts": {
+    "dev":"nodemon src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "0x1zen",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
