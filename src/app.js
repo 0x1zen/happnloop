@@ -31,6 +31,12 @@ app.use("/",(req,res)=>{
     res.send("hello from / route");
 })
 
+// Advanced Routing Techniques
+
+app.get("/ab+c",(req,res)=>{
+    res.send("Advacned");
+})
+
 app.listen(PORT,()=>{
     console.log(`Successfully listening on ${PORT}`);
 })
