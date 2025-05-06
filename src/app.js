@@ -2,11 +2,30 @@ const express=require("express");
 
 const app=express();
 
+const {adminAuth,userAuth}= require("./middleware/auth.js")
+
 const PORT=3000;
+
+// admin routes
+
+
+
+app.use("/admin",adminAuth);
+
+app.get("/admin/getAllData",(req,res)=>{
+    res.status(200).send("All Data");
+})
+
+app.get("/user/login",(req,res)=>{
+    res.send("user logged in");
+})
+
+app.use("/user",userAuth);
 
 app.get("/user",(req,res)=>{
     res.send("User Data");
 })
+
 app.post("/user",(req,res)=>{
     res.send("status 200");
 })
