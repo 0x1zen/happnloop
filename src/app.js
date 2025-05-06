@@ -26,6 +26,10 @@ app.use("/test",(req,res)=>{
 
 app.use("/hello",(req,res)=>{
     res.send("hello from hello route");
+
+})
+app.get("/abc/:userId/:userName",(req,res)=>{
+    console.log(req.params);
 })
 app.use("/",(req,res)=>{
     res.send("hello from / route");
@@ -33,9 +37,7 @@ app.use("/",(req,res)=>{
 
 // Advanced Routing Techniques
 
-app.get("/ab+c",(req,res)=>{
-    res.send("Advacned");
-})
+
 
 app.listen(PORT,()=>{
     console.log(`Successfully listening on ${PORT}`);
