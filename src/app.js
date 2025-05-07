@@ -16,11 +16,46 @@ app.use(express.json());
 app.post("/signup",async(req,res)=>{
   try{ 
     const user=new User(req.body); 
-    await user.save().then(()=>{
-      res.status(200).send("User SIgned Up Successfully");
-    })
+    const newUser=await user.save();
+      res.status(200).send("User Created Successfully");
   }catch(err){
-    console.error(err);
+    res.status(500).send("Error Occured " + err.message);
+  }
+  
+})
+
+// Find By ID And Delete
+
+app.get("/delete",async(req,res)=>{
+  const userId=req.body.userId;
+  try{
+    const result=await User.findByIdAndDelete({_id : userId});
+    console.log(result);
+    if(result){
+      res.status(200).send("User Deleted Successfully");
+    }
+    else{
+      res.status(404).send("User Not Found");
+    }
+  }catch(err){
+    console.error("Error Occured "+err.message);
+  }
+})
+
+// Update User Info by user id
+app.patch("/update",async(req,res)=>{
+  const userInfoUpdate = req.body;
+  try{
+    const result = 
+    await User.findByIdAndUpdate({_id:userInfoUpdate.userId},userInfoUpdate.data);
+  if(result){
+    res.status(200).send("User Data Updated Successfully");
+  }
+  else{
+    res.status(404).send("User Not Found");
+  }
+  }catch(err){
+    console.error("Error Occured "+err.message);
   }
   
 })
