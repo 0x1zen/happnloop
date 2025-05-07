@@ -1,9 +1,59 @@
 const express = require("express");
 const connectDB = require("./config/database");
+const User=require("./models/user");
 const app = express();
 
 const PORT = 3000;
 
+// API's
+
+// middlware to parse data to json
+
+app.use(express.json());
+
+// Sign up API
+
+app.post("/signup",async(req,res)=>{
+  try{ 
+    const user=new User(req.body); 
+    await user.save().then(()=>{
+      res.status(200).send("User SIgned Up Successfully");
+    })
+  }catch(err){
+    console.error(err);
+  }
+  
+})
+
+// Feed API - Get all the users from the database
+app.get("/feed",async(req,res)=>{
+  try{
+    const allUsers=await User.find({});
+    res.status(200).send(allUsers);
+  }catch(err){
+    console.error("Error Occured " + err.message);
+  }
+})
+
+// Find A User By His Email Id - GET
+
+app.get("/user",async(req,res)=>{
+  const userEmail = await req.body.emailId;
+  try{
+    const userData=await User.find({emailId : userEmail});
+    if(userData.length>0){
+      res.status(200).send(userData);
+    }
+    else{
+      res.status(404).send("No user Found With This Email Id");
+    }
+    
+  }catch(err){
+    console.error("Error Occured " + err.message);
+  }
+})
+
+// Database connectivity and listener
 connectDB()
   .then(() => {
     console.log("Database Connected Successfully");
