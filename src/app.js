@@ -45,17 +45,24 @@ app.get("/delete",async(req,res)=>{
 // Update User Info by user id
 app.patch("/update",async(req,res)=>{
   const userInfoUpdate = req.body;
+  
   try{
+    const userId=userInfoUpdate.userId;
+    delete userInfoUpdate.userId;
     const result = 
-    await User.findByIdAndUpdate({_id:userInfoUpdate.userId},userInfoUpdate.data);
+    await User.findByIdAndUpdate({_id:userId},userInfoUpdate , {
+      returnDocument : "after" , 
+      runValidators : true,
+    });
   if(result){
+    console.log(result);
     res.status(200).send("User Data Updated Successfully");
   }
   else{
     res.status(404).send("User Not Found");
   }
   }catch(err){
-    console.error("Error Occured "+err.message);
+    res.send("Error Occured "+err.message);
   }
   
 })
@@ -73,7 +80,8 @@ app.get("/feed",async(req,res)=>{
 // Find A User By His Email Id - GET
 
 app.get("/user",async(req,res)=>{
-  const userEmail = await req.body.emailId;
+  const userEmail =req.body.emailId;
+  console.log(userEmail);
   try{
     const userData=await User.find({emailId : userEmail});
     if(userData.length>0){
