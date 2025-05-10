@@ -4,33 +4,41 @@ const userSchema = new mongoose.Schema({
     firstName : {
         type : String,
         required:true,
-        minLength : 4,
+        minLength : 2,
         maxLength : 50
     },
     lastName : {
         type : String,
+        minLength : 2,
+        maxLength : 50
     },
     emailId : {
         type : String,
         lowercase : true,
         required:true,
         unique:true,
-        trim:true
+        trim:true,
+        immutable : true,
+        minLength : 5,
+        maxLength : 50
     },
     password : {
         type : String,
-        required:true
+        required:true,
+        minLength : 8,
+        maxLength : 25
     },
     age : {
         type : Number,
-        min : 18
+        min : 18 ,
     },
     gender : {
         type : String,
-        validate(value){
-            if(!["male","female","others"].includes(value)){
-                throw new Error("Gender Data Not Valid");
-            }
+        validate : {
+            validator : (value)=>{
+                return ["male","female","other"].includes(value);
+            },
+            message : props=> `Your input should be "male","female" or "other".Your current input is "${props.value}".`
         }
     },
     photoUrl : {
@@ -39,12 +47,20 @@ const userSchema = new mongoose.Schema({
     },
     about : {
         type : String,
-        default : "Heya! I am a happnloop user."
+        default : "Heya! I am a happnloop user.",
+        minLength : 20,
+        maxLength : 200
     },
     skills : {
-        type : [String]
+        type : [String],
+        validate : {
+            validator : (value)=>{
+                return value.length<=20;
+            },
+             message: props => `You can add up to 20 skills only. Currently, you have ${props.value.length}.`
+        }
     }
-})
+},{timestamps:true})
 
 const userModel = mongoose.model("User",userSchema);
 
