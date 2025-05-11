@@ -1,12 +1,16 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const bcrypt = require("bcrypt");
-const cookieParser=require("cookie-parser");
+const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const User = require("./models/user");
 const app = express();
 
 const PORT = 3000;
+
+// Auth Middlewares
+
+const { userAuth } = require("./middlewares/auth");
 
 // Validate functions
 
@@ -64,7 +68,6 @@ app.post("/login", async (req, res) => {
     // Checkign for Valid Credentials
     const { emailId, password } = req.body;
     const isFound = await User.findOne({ emailId: emailId });
-    console.log(isFound);
     if (!isFound) {
       res.status(404).send("Invalid Credentials");
     }
@@ -73,10 +76,13 @@ app.post("/login", async (req, res) => {
       const isPasswordValid = await bcrypt.compare(password, isFound.password);
       if (isPasswordValid) {
         // Create a JWT
-        const token = await jwt.sign({_id:isFound._id.toString()},"DEV@Happnloop$2"); 
+        const token = await jwt.sign(
+          { _id: isFound._id.toString() },
+          "DEV@Happnloop$2"
+        );
         // Add the token to cookie
         // send the response back to the user
-        res.cookie("token",token,{domain: '', path: '/'});
+        res.cookie("token", token, { domain: "", path: "/" });
         res.status(200).send("Login Successful");
       } else {
         res.status(400).send("Incorrect Credentials");
@@ -89,36 +95,27 @@ app.post("/login", async (req, res) => {
 
 // profile api
 
-app.get("/profile",async(req,res)=>{
-  try{
-    const cookie = req.cookies;
-  const {token} = cookie;
-  if(!token){
-    throw new Error("Something Happened : Please Login Again");
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    // Sending back profile data
+    const userData=req.user;
+    if (userData) {
+      res.status(200).send({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        about: userData.about,
+      });
+    } else {
+      throw new Error("Something Happened : Please Login Again");
+    }
+  } catch (err) {
+    res.status(400).send("Error :" + err.message);
   }
-  const decodedMessage = await jwt.verify(token,"DEV@Happnloop$2");
-  const {_id}=decodedMessage;
-  // Sending back profile data
-  const userData=await User.findById({_id:_id});
-  if(userData){
-    res.status(200).send({
-      firstName : userData.firstName,
-      lastName : userData.lastName ,
-      about : userData.about
-    });
-  }
-  else{
-    throw new Error("Something Happened : Please Login Again");
-  }
-  }catch(err){
-    res.status(400).send("Error :"+err.message);
-  }
-  
-})
+});
 
 // Find By ID And Delete
 
-app.get("/delete", async (req, res) => {
+app.get("/delete", userAuth, async (req, res) => {
   const userId = req.body.userId;
   try {
     const result = await User.findByIdAndDelete({ _id: userId });
@@ -134,7 +131,7 @@ app.get("/delete", async (req, res) => {
 });
 
 // Update User Info by user id
-app.patch("/update/:userId", async (req, res) => {
+app.patch("/update/:userId", userAuth, async (req, res) => {
   const userInfoUpdate = req.body;
   const userId = req.params.userId;
   try {
@@ -176,7 +173,7 @@ app.patch("/update/:userId", async (req, res) => {
 });
 
 // Feed API - Get all the users from the database
-app.get("/feed", async (req, res) => {
+app.get("/feed", userAuth, async (req, res) => {
   try {
     const allUsers = await User.find({});
     res.status(200).send(allUsers);
@@ -187,7 +184,7 @@ app.get("/feed", async (req, res) => {
 
 // Find A User By His Email Id - GET
 
-app.get("/user", async (req, res) => {
+app.get("/user", userAuth, async (req, res) => {
   const userEmail = req.body.emailId;
   console.log(userEmail);
   try {
