@@ -1,6 +1,8 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const bcrypt = require("bcrypt");
+const cookieParser=require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const User = require("./models/user");
 const app = express();
 
@@ -16,6 +18,7 @@ const { validateLoginData } = require("./utils/validateLoginData");
 // middlware to parse data to json
 
 app.use(express.json());
+app.use(cookieParser());
 
 // Sign up API
 
@@ -60,8 +63,8 @@ app.post("/login", async (req, res) => {
 
     // Checkign for Valid Credentials
     const { emailId, password } = req.body;
-
     const isFound = await User.findOne({ emailId: emailId });
+    console.log(isFound);
     if (!isFound) {
       res.status(404).send("Invalid Credentials");
     }
@@ -69,7 +72,12 @@ app.post("/login", async (req, res) => {
     else {
       const isPasswordValid = await bcrypt.compare(password, isFound.password);
       if (isPasswordValid) {
-        res.status(200).send("User Login SuccessFul");
+        // Create a JWT
+        const token = await jwt.sign({_id:isFound._id.toString()},"DEV@Happnloop$2"); 
+        // Add the token to cookie
+        // send the response back to the user
+        res.cookie("token",token,{domain: '', path: '/'});
+        res.status(200).send("Login Successful");
       } else {
         res.status(400).send("Incorrect Credentials");
       }
@@ -78,6 +86,35 @@ app.post("/login", async (req, res) => {
     res.status(400).send("Error :" + err.message);
   }
 });
+
+// profile api
+
+app.get("/profile",async(req,res)=>{
+  try{
+    const cookie = req.cookies;
+  const {token} = cookie;
+  if(!token){
+    throw new Error("Something Happened : Please Login Again");
+  }
+  const decodedMessage = await jwt.verify(token,"DEV@Happnloop$2");
+  const {_id}=decodedMessage;
+  // Sending back profile data
+  const userData=await User.findById({_id:_id});
+  if(userData){
+    res.status(200).send({
+      firstName : userData.firstName,
+      lastName : userData.lastName ,
+      about : userData.about
+    });
+  }
+  else{
+    throw new Error("Something Happened : Please Login Again");
+  }
+  }catch(err){
+    res.status(400).send("Error :"+err.message);
+  }
+  
+})
 
 // Find By ID And Delete
 
