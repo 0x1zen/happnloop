@@ -1,9 +1,15 @@
 const express = require("express");
 const connectDB = require("./config/database");
+const bcrypt = require("bcrypt");
 const User = require("./models/user");
 const app = express();
 
 const PORT = 3000;
+
+// Validate functions
+
+const { validateSignUpData } = require("./utils/validation");
+const { validateLoginData } = require("./utils/validateLoginData");
 
 // API's
 
@@ -14,28 +20,62 @@ app.use(express.json());
 // Sign up API
 
 app.post("/signup", async (req, res) => {
-  const data=req.body;
   try {
-    if (data?.firstName.length < 2) {
-      throw new Error(
-        "Invalid Update Request : Enter A Valid First Name"
-      );
+    // Validation
+
+    validateSignUpData(req);
+
+    // Check for existing user
+    const isFound = await User.findOne({ emailId: req.body.emailId });
+    if (isFound) {
+      throw new Error("Email Already Taken");
     }
-    if (data?.lastName.length < 2) {
-      throw new Error(
-        "Invalid Update Request : Enter A Valid Last Name"
-      );
-    }
-    // if (data?.skills.length > 20) {
-    //   throw new Error(
-    //     "Invalid Update Request : Skills More Than 20 Are Not Allowed"
-    //   );
-    // }
-    const user = new User(req.body);
+
+    // Password Encryption
+
+    const password = req.body.password;
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Saving User Data To Database
+
+    const user = new User({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      emailId: req.body.emailId,
+      password: passwordHash,
+    });
     const newUser = await user.save();
     res.status(200).send("User Created Successfully");
   } catch (err) {
-    res.status(500).send("Error Occured " + err.message);
+    res.status(500).send("Error :" + err.message);
+  }
+});
+
+// Login API
+
+app.post("/login", async (req, res) => {
+  try {
+    // Validate Values
+    validateLoginData(req);
+
+    // Checkign for Valid Credentials
+    const { emailId, password } = req.body;
+
+    const isFound = await User.findOne({ emailId: emailId });
+    if (!isFound) {
+      res.status(404).send("Invalid Credentials");
+    }
+    // Checking For Correct Password
+    else {
+      const isPasswordValid = await bcrypt.compare(password, isFound.password);
+      if (isPasswordValid) {
+        res.status(200).send("User Login SuccessFul");
+      } else {
+        res.status(400).send("Incorrect Credentials");
+      }
+    }
+  } catch (err) {
+    res.status(400).send("Error :" + err.message);
   }
 });
 
@@ -91,7 +131,7 @@ app.patch("/update/:userId", async (req, res) => {
       console.log(result);
       res.status(200).send("User Data Updated Successfully");
     } else {
-      res.status(404).send("User Not Found");
+      res.status(404).send("Inavlid Request");
     }
   } catch (err) {
     res.status(400).send("Error Occured " + err.message);
@@ -118,7 +158,7 @@ app.get("/user", async (req, res) => {
     if (userData) {
       res.status(200).send(userData);
     } else {
-      res.status(404).send("No user Found With This Email Id");
+      res.status(404).send("Invalid Credentials");
     }
   } catch (err) {
     console.error("Error Occured " + err.message);

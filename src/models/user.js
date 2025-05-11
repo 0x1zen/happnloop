@@ -1,14 +1,16 @@
 const mongoose=require("mongoose");
-
+const validator = require("validator");
 const userSchema = new mongoose.Schema({
     firstName : {
         type : String,
+        trim : true,
         required:true,
         minLength : 2,
         maxLength : 50
     },
     lastName : {
         type : String,
+        trim : true,
         minLength : 2,
         maxLength : 50
     },
@@ -20,13 +22,23 @@ const userSchema = new mongoose.Schema({
         trim:true,
         immutable : true,
         minLength : 5,
-        maxLength : 50
+        maxLength : 50,
+        validate : {
+            validator : (value)=>{
+                return validator.isEmail(value);
+            },
+            message : props=> `Invalid EmailID :"${props.value}".`
+        }
     },
     password : {
         type : String,
         required:true,
-        minLength : 8,
-        maxLength : 25
+        validate : {
+            validator(value){
+                return validator.isStrongPassword(value);
+            },
+            message : (props)=> `Weak Password ${props.value}`
+        }
     },
     age : {
         type : Number,
@@ -43,7 +55,13 @@ const userSchema = new mongoose.Schema({
     },
     photoUrl : {
         type : String,
-        default : "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg"
+        default : "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
+        validate : {
+            validator(value){
+                return validator.isURL(value);
+            },
+            message : props => `Invalid Photo URL ${props.value}`
+        }
     },
     about : {
         type : String,
