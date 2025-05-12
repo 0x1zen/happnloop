@@ -64,25 +64,28 @@ app.post("/login", async (req, res) => {
   try {
     // Validate Values
     validateLoginData(req);
-
     // Checkign for Valid Credentials
     const { emailId, password } = req.body;
-    const isFound = await User.findOne({ emailId: emailId });
-    if (!isFound) {
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
       res.status(404).send("Invalid Credentials");
     }
     // Checking For Correct Password
     else {
-      const isPasswordValid = await bcrypt.compare(password, isFound.password);
+      const isPasswordValid =await user.validatePassword(password);
       if (isPasswordValid) {
         // Create a JWT
-        const token = await jwt.sign(
-          { _id: isFound._id.toString() },
-          "DEV@Happnloop$2"
-        );
+        const token = await user.getJWT();
         // Add the token to cookie
-        // send the response back to the user
-        res.cookie("token", token, { domain: "", path: "/" });
+        res.cookie("token", token, {
+          expires: new Date(Date.now() + 8 * 3600000),
+          domain: "",
+          path: "/",
+          httpOnly: true,
+          secure: true,
+          sameSite: "Strict",
+        });
+
         res.status(200).send("Login Successful");
       } else {
         res.status(400).send("Incorrect Credentials");
@@ -98,7 +101,7 @@ app.post("/login", async (req, res) => {
 app.get("/profile", userAuth, async (req, res) => {
   try {
     // Sending back profile data
-    const userData=req.user;
+    const userData = req.user;
     if (userData) {
       res.status(200).send({
         firstName: userData.firstName,
@@ -143,14 +146,14 @@ app.patch("/update/:userId", userAuth, async (req, res) => {
       "about",
     ];
     const isUpdateAllowed = Object.keys(userInfoUpdate).every((k) =>
-      allowedUpdates.includes(k)
+      allowedUpdates.includes(k),
     );
     if (!isUpdateAllowed) {
       throw new Error("Invalid Update Request");
     }
     if (userInfoUpdate?.skills.length > 20) {
       throw new Error(
-        "Invalid Update Request : Skills More Than 20 Are Not Allowed"
+        "Invalid Update Request : Skills More Than 20 Are Not Allowed",
       );
     }
     const result = await User.findByIdAndUpdate(
@@ -159,7 +162,7 @@ app.patch("/update/:userId", userAuth, async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
     if (result) {
       console.log(result);
