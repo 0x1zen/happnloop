@@ -43,9 +43,23 @@ const userSchema = new mongoose.Schema(
                 message: (props) => `Weak Password ${props.value}`,
             },
         },
-        age: {
-            type: Number,
-            min: 18,
+        dateOfBirth: {
+            type: Date,
+            required : true,
+            validate : {
+                validator : (value)=> {
+                    // Mongoose automatically converts the string value into Date
+                    // Object.
+                    const today = Date.now(); // returns milliseconds since 1970
+                    const ageDiffMs = today - value; //gives difference in milliseconds
+                    const ageDate = new Date(ageDiffMs); //calculates age from year 1970
+                    // so basically 1970 + xxxxxx milli-seconds
+                    const age = Math.abs(ageDate.getUTCFullYear()-1970); //subtracting age with 1970
+                    // basically getting age in years
+                    return age >= 18;
+                },
+                message : props => `Your age is less than 18`
+            }
         },
         gender: {
             type: String,
@@ -90,7 +104,6 @@ const userSchema = new mongoose.Schema(
 
 userSchema.methods.getJWT = async function () {
     const user = this;
-    console.log(user);
     const token = await jwt.sign(
         { _id: user._id.toString() },
         "DEV@Happnloop$2",
@@ -100,6 +113,7 @@ userSchema.methods.getJWT = async function () {
 };
 userSchema.methods.validatePassword = async function (password) {
     const user = this;
+    console.log(user.password);
     const isValid = await bcrypt.compare(password, user.password);
     return isValid;
 }

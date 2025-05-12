@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const { userAuth } = require("../middlewares/auth");
 
 const {
   validateSignUpData,
@@ -33,6 +34,7 @@ authRouter.post("/signup", async (req, res) => {
       lastName: req.body.lastName,
       emailId: req.body.emailId,
       password: passwordHash,
+      dateOfBirth: req.body.dateOfBirth,
     });
     const newUser = await user.save();
     res.status(200).send("User Created Successfully");
@@ -43,35 +45,33 @@ authRouter.post("/signup", async (req, res) => {
 
 authRouter.post("/login", async (req, res) => {
   try {
-    // Validate Values
     validateLoginData(req);
-    // Checkign for Valid Credentials
     const { emailId, password } = req.body;
     const user = await User.findOne({ emailId: emailId });
     if (!user) {
-      res.status(404).send("Invalid Credentials");
+      res.status(400).send("Invalid User");
     }
-    // Checking For Correct Password
-    else {
-      const isPasswordValid = await user.validatePassword(password);
-      if (isPasswordValid) {
-        // Create a JWT
-        const token = await user.getJWT();
-        // Add the token to cookie
-        res.cookie("token", token, {
-          expires: new Date(Date.now() + 8 * 3600000),
-          domain: "",
-          path: "/",
-          httpOnly: true,
-          secure: true,
-          sameSite: "Strict",
-        });
+    const isPasswordValid = await user.validatePassword(password);
+    if (isPasswordValid) {
+      const token = await user.getJWT();
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+        domain: "",
+        path: "/",
+      });
+      res.status(200).send("Login Successful");
+    } else {
+      res.status(400).send("Incorrect Credentials");
+    }
+  } catch (err) {
+    res.status(400).send("Error :" + err.message);
+  }
+});
 
-        res.status(200).send("Login Successful");
-      } else {
-        res.status(400).send("Incorrect Credentials");
-      }
-    }
+authRouter.post("/logout", (req, res) => {
+  try {
+    res.cookie("token", null, { expires: new Date(Date.now()) });
+    res.status(200).send("Logged out successfully");
   } catch (err) {
     res.status(400).send("Error :" + err.message);
   }
