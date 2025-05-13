@@ -63,13 +63,14 @@ const userSchema = new mongoose.Schema(
         },
         gender: {
             type: String,
-            validate: {
-                validator: (value) => {
-                    return ["male", "female", "other"].includes(value);
-                },
-                message: (props) =>
-                    `Your input should be "male","female" or "other".Your current input is "${props.value}".`,
-            },
+            enum : []
+            // validate: {
+            //     validator: (value) => {
+            //         return ["male", "female", "other"].includes(value);
+            //     },
+            //     message: (props) =>
+            //         `Your input should be "male","female" or "other".Your current input is "${props.value}".`,
+            // },
         },
         photoUrl: {
             type: String,
