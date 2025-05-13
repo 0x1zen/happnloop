@@ -63,7 +63,10 @@ const userSchema = new mongoose.Schema(
         },
         gender: {
             type: String,
-            enum : []
+            enum : {
+                values : ["male","female","other"],
+                message : props => `Invalid Gender Entered ${props.value}`
+            }
             // validate: {
             //     validator: (value) => {
             //         return ["male", "female", "other"].includes(value);
