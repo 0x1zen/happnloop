@@ -45,28 +45,28 @@ const userSchema = new mongoose.Schema(
         },
         dateOfBirth: {
             type: Date,
-            required : true,
-            validate : {
-                validator : (value)=> {
+            required: true,
+            validate: {
+                validator: (value) => {
                     // Mongoose automatically converts the string value into Date
                     // Object.
                     const today = Date.now(); // returns milliseconds since 1970
                     const ageDiffMs = today - value; //gives difference in milliseconds
                     const ageDate = new Date(ageDiffMs); //calculates age from year 1970
                     // so basically 1970 + xxxxxx milli-seconds
-                    const age = Math.abs(ageDate.getUTCFullYear()-1970); //subtracting age with 1970
+                    const age = Math.abs(ageDate.getUTCFullYear() - 1970); //subtracting age with 1970
                     // basically getting age in years
                     return age >= 18;
                 },
-                message : props => `Your age is less than 18`
-            }
+                message: (props) => `Your age is less than 18`,
+            },
         },
         gender: {
             type: String,
-            enum : {
-                values : ["male","female","other"],
-                message : props => `Invalid Gender Entered ${props.value}`
-            }
+            enum: {
+                values: ["male", "female", "other"],
+                message: (props) => `Invalid Gender Entered ${props.value}`,
+            },
             // validate: {
             //     validator: (value) => {
             //         return ["male", "female", "other"].includes(value);
@@ -106,6 +106,8 @@ const userSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
+userSchema.index({ firstName: 1, lastName: 1 });
+
 userSchema.methods.getJWT = async function () {
     const user = this;
     const token = await jwt.sign(
@@ -119,7 +121,7 @@ userSchema.methods.validatePassword = async function (password) {
     const user = this;
     const isValid = await bcrypt.compare(password, user.password);
     return isValid;
-}
+};
 
 const userModel = mongoose.model("User", userSchema);
 
