@@ -2,6 +2,7 @@ const express = require("express");
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const userRouter = express.Router();
+const User = require("../models/user");
 
 const USER_SAFE_DATA = "firstName lastName photoUrl";
 
@@ -49,6 +50,40 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
       };
     });
     res.status(200).json({ data: people });
+  } catch (err) {
+    res.status(400).send("Error :" + err.message);
+  }
+});
+
+userRouter.get("/feed", userAuth, async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    var skip = (page - 1) * limit;
+
+    const allRequests = await ConnectionRequest.find({
+      $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
+    }).select("fromUserId toUserId");
+
+    const hideUsersFromFeed = new Set();
+
+    allRequests.forEach((request) => {
+      hideUsersFromFeed.add(request.fromUserId.toString());
+      hideUsersFromFeed.add(request.toUserId.toString());
+    });
+
+    var allUser = await User.find({
+      $and: [
+        { _id: { $nin: Array.from(hideUsersFromFeed) } },
+        { _id: { $ne: loggedInUser._id } },
+      ],
+    })
+      .select(USER_SAFE_DATA)
+      .skip(skip)
+      .limit(limit);
+    res.status(200).json({ data: allUser });
   } catch (err) {
     res.status(400).send("Error :" + err.message);
   }

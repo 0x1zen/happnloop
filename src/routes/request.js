@@ -16,7 +16,7 @@ requestRouter.post(
 
       const allowedStatus = ["ignored", "interested"];
       if (!allowedStatus.includes(status)) {
-        res.status(400).json({
+        return res.status(400).json({
           message: "Invalid Status",
         });
       }
