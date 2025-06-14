@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
-    await mongoose.connect("/happnloop");
+    await mongoose.connect(
+        "",
+    );
 };
 
 module.exports = connectDB;

@@ -47,19 +47,29 @@ authRouter.post("/login", async (req, res) => {
   try {
     validateLoginData(req);
     const { emailId, password } = req.body;
+    console.log(emailId, password);
     const user = await User.findOne({ emailId: emailId });
     if (!user) {
-      res.status(400).send("Invalid User");
+      return res.status(400).send("Invalid User");
     }
     const isPasswordValid = await user.validatePassword(password);
     if (isPasswordValid) {
       const token = await user.getJWT();
       res.cookie("token", token, {
+        httpOnly : true,
+        secure:true,
+        sameSite:"None",
         expires: new Date(Date.now() + 8 * 3600000),
         domain: "",
         path: "/",
       });
-      res.status(200).send("Login Successful");
+      res.status(200).json({
+        status: "Login Successful",
+        userData: {
+          name: user.firstName + " " + user.lastName,
+          photoUrl: user.photoUrl,
+        },
+      });
     } else {
       res.status(400).send("Incorrect Credentials");
     }
