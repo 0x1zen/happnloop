@@ -71,7 +71,7 @@ authRouter.post("/login", async (req, res) => {
         },
       });
     } else {
-      res.status(400).send("Incorrect Credentials");
+      return res.status(400).json({message : "Incorrect Credentials"});
     }
   } catch (err) {
     res.status(400).send("Error :" + err.message);
@@ -81,7 +81,7 @@ authRouter.post("/login", async (req, res) => {
 authRouter.post("/logout", (req, res) => {
   try {
     res.cookie("token", null, { expires: new Date(Date.now()) });
-    res.status(200).send("Logged out successfully");
+    return res.status(200).json({message:"Logged out successfully"});
   } catch (err) {
     res.status(400).send("Error :" + err.message);
   }
