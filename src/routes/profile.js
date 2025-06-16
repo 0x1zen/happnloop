@@ -11,10 +11,11 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
     // Sending back profile data
     const userData = req.user;
     if (userData) {
-      res.status(200).send({
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        about: userData.about,
+      return res.status(200).json({
+        userData: {
+          name: userData.firstName + " " + userData.lastName,
+          photoUrl: userData.photoUrl,
+        }
       });
     } else {
       throw new Error("Something Happened : Please Login Again");

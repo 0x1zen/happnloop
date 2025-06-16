@@ -7,7 +7,7 @@ const userAuth = async (req, res, next) => {
     const cookie = req.cookies;
     const { token } = cookie;
     if(!token){
-        throw new Error("Please Login");
+        return res.status(401).json({message : "Please Login"});
     }
     // Validate the token
     const decodedMessage = jwt.verify(token, "DEV@Happnloop$2");
@@ -21,7 +21,7 @@ const userAuth = async (req, res, next) => {
       next();
     }
   } catch (err) {
-    res.status(400).send("Error : " + err.message);
+    return res.status(400).json({message : err.message});
   }
 };
 

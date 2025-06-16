@@ -56,12 +56,11 @@ authRouter.post("/login", async (req, res) => {
     if (isPasswordValid) {
       const token = await user.getJWT();
       res.cookie("token", token, {
-        httpOnly : true,
-        secure:true,
-        sameSite:"None",
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
         expires: new Date(Date.now() + 8 * 3600000),
-        domain: "",
-        path: "/",
+        // path: "/",
       });
       res.status(200).json({
         status: "Login Successful",
@@ -71,7 +70,7 @@ authRouter.post("/login", async (req, res) => {
         },
       });
     } else {
-      return res.status(400).json({message : "Incorrect Credentials"});
+      return res.status(400).json({ message: "Incorrect Credentials" });
     }
   } catch (err) {
     res.status(400).send("Error :" + err.message);
@@ -81,7 +80,7 @@ authRouter.post("/login", async (req, res) => {
 authRouter.post("/logout", (req, res) => {
   try {
     res.cookie("token", null, { expires: new Date(Date.now()) });
-    return res.status(200).json({message:"Logged out successfully"});
+    return res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
     res.status(400).send("Error :" + err.message);
   }
