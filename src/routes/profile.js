@@ -10,6 +10,7 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
     // Sending back profile data
     const userData = req.user;
+    console.log(userData);
     if (userData) {
       return res.status(200).json({
         userData: {
@@ -34,7 +35,6 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     if (!isAllowed) {
       throw new Error("Invalid Data");
     } else {
-      // const updatedUser = await User.findByIdAndUpdate({ _id: user._id }, user,{runValidators : true,new : true});
       await user.save();
       res.status(200).json({ message: "User Updated Successfully!" });
     }
@@ -43,7 +43,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
   }
 });
 
-// The forgot password api
+
 
 profileRouter.patch("/profile/changePassword", userAuth, async (req, res) => {
   try {
